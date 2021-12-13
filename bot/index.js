@@ -52,19 +52,44 @@ function postReTweet(id) {
     })
 }
 
+function postLike(id) {
+    return new Promise((resolve, reject) => {
+
+        let params = {
+            id,
+        };
+        twit.post('favorites/create', params, (err, data) => {
+            if (err) {
+                return reject(err);
+            }
+            return resolve(data);
+        })
+    })
+}
+
 async function main() {
     try {
         const params = readParams();
 
         const data = await getTweets(params.since_id);
         const tweets = data.statuses;
+        
         console.log("We got the Tweets", tweets.length);
         for await (let tweet of tweets) {
             try {
                 await postReTweet(tweet.id_str);
                 console.log("Successful retweet " + tweet.id_str + tweet.user);
-            } catch (e) { console.log("unsuccessful retweet" + tweet.id_str + tweet) };
-
+            } catch (e) {
+                console.log("Unsuccessful retweet " + tweet.id_str + tweet);
+                console.error(e);
+            };
+            try {
+                await postLike(tweet.id_str);
+                console.log("Successful Like " + tweet.id_str + tweet.user);
+            } catch (e) {
+                console.log("Unsuccessful Like" + tweet.id_str + tweet);
+                console.error(e);
+            };
             params.since_id = tweet.id_str;
         }
         writeParams(params);
