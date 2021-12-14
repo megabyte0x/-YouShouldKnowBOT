@@ -7,16 +7,19 @@ const path = require("path");
 const paramsPath = path.join(__dirname, 'params.json');
 
 function writeParams(data) {
+    // Write the params file and then return it into JSON format.
     console.log("We are writing the params file...", data);
     return fs.writeFileSync(paramsPath, JSON.stringify(data));
 };
 function readParams() {
+    // Reads the params file and then return it into JSON format.
     console.log("We are reading the parmas file...");
     const data = fs.readFileSync(paramsPath);
     return JSON.parse(data.toString());
 };
 
 function getTweets(since_id) {
+    //  This function will get the top 10 Tweets with the HASTAG #YouShouldKnow
     return new Promise
         ((resolve, reject) => {
             let params = {
@@ -38,6 +41,8 @@ function getTweets(since_id) {
 }
 
 function postReTweet(id) {
+    // This function take the Tweet ID as the Url Parameter and will Retweet the Tweet with
+    // coressponding Tweet ID.
     return new Promise((resolve, reject) => {
 
         let params = {
@@ -53,6 +58,8 @@ function postReTweet(id) {
 }
 
 function postLike(id) {
+    // This function take the Tweet ID as the Parameter and will Like the Tweet with
+    // coressponding Tweet ID.
     return new Promise((resolve, reject) => {
 
         let params = {
@@ -69,25 +76,24 @@ function postLike(id) {
 
 async function main() {
     try {
-        const params = readParams();
-
-        const data = await getTweets(params.since_id);
-        const tweets = data.statuses;
+        const params = readParams(); // Read the last params since_id
+        const data = await getTweets(params.since_id); // Gets the Tweets, passes last tweetID
+        const tweets = data.statuses; // Store the data of the tweets in a variable.
         
         console.log("We got the Tweets", tweets.length);
         for await (let tweet of tweets) {
             try {
                 await postReTweet(tweet.id_str);
-                console.log("Successful retweet " + tweet.id_str + tweet.user);
+                console.log("Successful retweet");
             } catch (e) {
-                console.log("Unsuccessful retweet " + tweet.id_str + tweet);
+                console.log("Unsuccessful retweet");
                 console.error(e);
             };
             try {
                 await postLike(tweet.id_str);
-                console.log("Successful Like " + tweet.id_str + tweet.user);
+                console.log("Successful Like");
             } catch (e) {
-                console.log("Unsuccessful Like" + tweet.id_str + tweet);
+                console.log("Unsuccessful Like");
                 console.error(e);
             };
             params.since_id = tweet.id_str;
@@ -100,4 +106,4 @@ async function main() {
 
 console.log("Starting the bot..");
 
-setInterval(main, 20 * 1000);
+setInterval(main, 20 * 1000); // Will Run the code in every 20s.
