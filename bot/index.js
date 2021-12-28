@@ -74,14 +74,38 @@ function postLike(id) {
     })
 }
 
+function createFrienship(user_id) {
+    // This function take the Tweet User's ID as the Parameter and will Follow the User.
+    return new Promise((resolve, reject) => {
+
+        let params = {
+            user_id,
+        };
+        twit.post('friendships/create', params, (err, data) => {
+            if (err) {
+                return reject(err);
+            }
+            return resolve(data);
+        })
+    })
+}
+
 async function main() {
     try {
         const params = readParams(); // Read the last params since_id
         const data = await getTweets(params.since_id); // Gets the Tweets, passes last tweetID
         const tweets = data.statuses; // Store the data of the tweets in a variable.
-        
+
         console.log("We got the Tweets", tweets.length);
         for await (let tweet of tweets) {
+            try {
+                console.log(tweet.user['id_str']);
+                createFrienship(tweet.user['id_str']);
+            } catch (e) {
+                console.log("Unsuccessful Friendship");
+                console.error(e);
+            }
+
             try {
                 await postReTweet(tweet.id_str);
                 console.log("Successful retweet");
@@ -89,6 +113,7 @@ async function main() {
                 console.log("Unsuccessful retweet");
                 console.error(e);
             };
+
             try {
                 await postLike(tweet.id_str);
                 console.log("Successful Like");
@@ -96,6 +121,7 @@ async function main() {
                 console.log("Unsuccessful Like");
                 console.error(e);
             };
+
             params.since_id = tweet.id_str;
         }
         writeParams(params);
